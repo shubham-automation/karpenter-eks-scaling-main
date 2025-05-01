@@ -1,0 +1,22 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  role: "KarpenterNodeRole-${CLUSTER_NAME}" # replace with your cluster name
+  amiSelectorTerms:
+    - alias: "al2023@${ALIAS_VERSION}"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}" # replace with your cluster name
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}" # replace with your cluster name
+  userData: |
+    #!/bin/bash -e
+    swapoff /dev/zram0
+    systemctl stop systemd-zram-setup@zram0.service
+    systemctl disable systemd-zram-setup@zram0.service
+    systemctl mask systemd-zram-setup@zram0.service
+    swapoff /dev/zram0
+    nodeadm init
